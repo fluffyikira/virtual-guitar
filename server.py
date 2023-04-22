@@ -26,11 +26,16 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         #print(data)
         #handVal = data["hand"]
         chordVal = data["value"]
+        mySpeed = data["speed"]
         print(chordVal)
+        print(mySpeed)
         #print(handVal)
         #playsound("chord_sounds/{}.wav".format(chordVal))
         print("Playing the {} chord sound".format(chordVal))
-        winsound.PlaySound("chord_sounds/{}_slow.wav".format(chordVal),winsound.SND_FILENAME)
+        if mySpeed > 1:
+            winsound.PlaySound("chord_sounds/{}_slow.wav".format(chordVal),winsound.SND_FILENAME)
+        else:
+            winsound.PlaySound("chord_sounds/{}_fast.wav".format(chordVal),winsound.SND_FILENAME)
 
 if len(argv) > 1:
     arg = argv[1].split(':')

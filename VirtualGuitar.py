@@ -1,6 +1,8 @@
 import cv2
 import mediapipe as mp
 
+import time
+
 import requests
 from keras.models import load_model
 import numpy as np
@@ -9,10 +11,11 @@ import json
 url = "http://localhost:8080"
 
 data = {
-    "value" : ""
+    "value" : "",
+    "speed" : ""
 }
 
-model = load_model('guitar_learner.h5')
+model = load_model('guitar_learner4.h5')
 chord_dict = {0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F', 6: 'G'}
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
@@ -52,14 +55,20 @@ def main():
                 if cx < 0.5000:
                     if cy < 0.4800:
                         print("UP")
+                        t1 = time.time()
+                        #print('Time 1 : ',t1)
                     if cy >= 0.4800 and cy <= 0.5200:
                         print("STRUM")
-                        leftOps(image)
-                        print('back to main function')
                         #data['hand'] = 'right'
                         #post_response = requests.post(url, json = data)
                     if cy > 0.5200:
                         print("DOWN")
+                        t2 = time.time()
+                        #print('Time 2 : ',t2)
+                        speed = t2-t1
+                        print('t2 - t1 : ',speed)
+                        leftOps(image,speed)
+                        print('back to main function')
         image = rescale_frame(image, percent=75)
         cv2.imshow("Play Guitar", image_orig)
         if cv2.waitKey(5) & 0xFF == 27:
@@ -67,7 +76,7 @@ def main():
     hands.close()
     cap.release()
 
-def leftOps(image):
+def leftOps(image,speed):
     height, width, waste = image.shape
     left_image = image[:,width//2:]
     left_image_orig = left_image
@@ -107,61 +116,10 @@ def leftOps(image):
     print('Chord value : ',chord_dict[pred_class])
     #print(type(chord_dict[pred_class]))
     data['value'] = chord_dict[pred_class]
+    data['speed'] = speed
     post_response = requests.post(url, json = data)
 
     return
-
-    # while cap.isOpened():
-    #     ret, image = cap.read()
-    #     image = cv2.flip(image, 1)
-    #     global image_orig
-    #     image_orig = cv2.flip(image, 1)
-    #     image = cv2.cvtColor(cv2.flip(image, 1), cv2.COLOR_BGR2RGB)
-        
-    #     global results_hand
-    #     results_hand = hands.process(image)
-    #     Hand = results_hand.multi_hand_landmarks
-        
-    #     if Hand != None:
-    #         for hand_landmarks in Hand:
-    #             myLandmark = hand_landmarks.landmark[11]
-    #             cx, cy = round(myLandmark.x,4), round(myLandmark.y,4)
-    #     if cx > 0.5000:
-    #         image.flags.writeable = True
-    #         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    #         if results_hand.multi_hand_landmarks:
-    #             for hand_landmarks in results_hand.multi_hand_landmarks:
-    #                 mp_drawing.draw_landmarks(
-    #                     image=image,
-    #                     landmark_list=hand_landmarks,
-    #                     connections=mp_hands.HAND_CONNECTIONS,
-    #                     landmark_drawing_spec=hand_landmark_drawing_spec,
-    #                     connection_drawing_spec=hand_connection_drawing_spec)
-    #         res = cv2.bitwise_and(image, cv2.bitwise_not(image_orig))
-
-    #         gray = cv2.cvtColor(res, cv2.COLOR_BGR2GRAY)
-    #         ret, th1 = cv2.threshold(gray, 25, 255, cv2.THRESH_BINARY)
-    #         contours, hierarchy = cv2.findContours(th1, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    #         if len(contours) > 0:
-    #             contours = sorted(contours, key=cv2.contourArea)
-    #             contour = contours[-1]
-    #             x1, y1, w1, h1 = cv2.boundingRect(contour)
-    #             # cv2.rectangle(image, (x1, y1), (x1 + w1, y1 + h1), (0, 255, 0), 2)
-    #             save_img = gray[y1:y1 + h1, x1:x1 + w1]
-    #             save_img = cv2.resize(save_img, (image_x, image_y))
-    #             pred_probab, pred_class = keras_predict(model, save_img)
-    #             print('Predicted chord class : ',pred_class)
-    #             #print(pred_class, pred_probab)
-                        
-    #         cv2.putText(image, str(chord_dict[pred_class]), (x1 + 50, y1 - 50), cv2.FONT_HERSHEY_SIMPLEX, 6, (255, 0, 0), 9)
-    #         print('Chord value : ',chord_dict[pred_class])
-    #         #print(type(chord_dict[pred_class]))
-    #         data['value'] = chord_dict[pred_class]
-    #         post_response = requests.post(url, json = data)
-
-            #image = rescale_frame(image, percent=75)
-            #cv2.imshow("Img", image)
 
 def keras_predict(model, image):
     processed = keras_process_image(image)
