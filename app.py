@@ -9,7 +9,8 @@ import pygame
 import io
 from PIL import Image
 
-url = 'http://34.125.211.31:5000/api/test'
+#add the current IP address
+url = ''
 
 # prepare headers for http request
 content_type = 'image/jpeg'
