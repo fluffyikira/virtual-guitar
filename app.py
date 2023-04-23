@@ -2,12 +2,14 @@ import cv2
 import mediapipe as mp
 import time
 import requests
+from flask import Flask, Response, render_template
 import numpy as np
 import json
 import pygame
-from keras.models import load_model
+import io
+from PIL import Image
 
-url = 'http://34.16.134.110:5000/api/test'
+url = 'http://34.125.211.31:5000/api/test'
 
 # prepare headers for http request
 content_type = 'image/jpeg'
@@ -22,7 +24,6 @@ hand_landmark_drawing_spec = mp_drawing.DrawingSpec(thickness=5, circle_radius=5
 hand_connection_drawing_spec = mp_drawing.DrawingSpec(thickness=10, circle_radius=10)
 cap = cv2.VideoCapture(0)
 
-
 def rescale_frame(frame, percent=75):
     width = int(frame.shape[1] * percent / 100)
     height = int(frame.shape[0] * percent / 100)
@@ -31,7 +32,6 @@ def rescale_frame(frame, percent=75):
 
 
 def main():
-
     while cap.isOpened():
         ret, image = cap.read()
         image = cv2.flip(image, 1)
@@ -46,19 +46,20 @@ def main():
                 myLandmark = hand_landmarks.landmark[11]
                 global cx,cy
                 cx, cy = round(myLandmark.x,4), round(myLandmark.y,4)
-                print('X : ',cx)
-                print('Y : ',cy)
-                print('')
+                # print('X : ',cx)
+                # print('Y : ',cy)
+                # print('')
+
                 if cx < 0.5000:
-                    if cy < 0.4800:
-                        print("UP")
+                    if cy < 0.4000:
+                        # print("UP")
                         t1 = time.time()
 
-                    if cy >= 0.4800 and cy <= 0.5200:
-                        print("STRUM")
+                    # if cy >= 0.4800 and cy <= 0.5200:
+                    #     print("STRUM")
 
-                    if cy > 0.5200:
-                        print("DOWN")
+                    if cy > 0.6000:
+                        # print("DOWN")
                         t2 = time.time()
                         speed = t2-t1
                         print('t2 - t1 : ',speed)
@@ -66,6 +67,10 @@ def main():
                         print('back to main function')
 
         image = rescale_frame(image, percent=75)
+        # Draw the lines on the image
+        cv2.line(image_orig, (960, 0), (960, image_orig.shape[0]), (0, 0, 255), 10)
+        cv2.line(image_orig, (0, 648), (960, 648), (255, 0, 0), 10)
+        cv2.line(image_orig, (0, 432), (960, 432), (0, 255, 0), 10)        
         cv2.imshow("Play Guitar", image_orig)
         if cv2.waitKey(5) & 0xFF == 27:
             break
@@ -76,7 +81,7 @@ def leftOps(image,speed):
     height, width, waste = image.shape
     left_image = image[:,width//2:]
     left_image_orig = left_image
-    cv2.imshow("Left half", left_image_orig)
+    # cv2.imshow("Left half", left_image_orig)
     L_results_hand = hands.process(left_image)
 
     left_image.flags.writeable = True    
@@ -101,6 +106,8 @@ def leftOps(image,speed):
         x1, y1, w1, h1 = cv2.boundingRect(contour)
         save_img = gray[y1:y1 + h1, x1:x1 + w1]
         save_img = cv2.resize(save_img, (image_x, image_y))
+        global skeletal 
+        skeletal = save_img
         cv2.imshow('skeletal left',save_img)
 
     _, img_encoded = cv2.imencode('.jpg', save_img)
