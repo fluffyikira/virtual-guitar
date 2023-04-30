@@ -1,4 +1,4 @@
-# virtual-guitar
+# Virtual Guitar System
 virtual guitar simulator using computer vision
 
 Link to the Dataset: 
