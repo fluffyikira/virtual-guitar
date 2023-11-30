@@ -1,9 +1,9 @@
 # Virtual Guitar System
 virtual guitar simulator using computer vision
 
-Link to the Dataset: 
+Link to the Demo: 
 
-https://drive.google.com/file/d/1JScgxmA8TrcIjDGXJzcTcj6KMVW0zSGq/view?usp=share_link
+https://www.youtube.com/watch?v=hCnw-rZ23FM
 
 Hardware Requirements:
 - Laptop/Desktop Computer
